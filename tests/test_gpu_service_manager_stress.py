@@ -55,9 +55,10 @@ def _free_port() -> int:
 
 @pytest.fixture
 def live_server(tmp_path: Path):
-    root = tmp_path / "gpu-root"
-    _copy_dummy_services(root)
-    (root / "runtime").mkdir(parents=True, exist_ok=True)
+    services_root = tmp_path / "services"
+    runtime_root = tmp_path / "runtime"
+    _copy_dummy_services(tmp_path)
+    runtime_root.mkdir(parents=True, exist_ok=True)
 
     port = _free_port()
     base_url = f"http://127.0.0.1:{port}"
@@ -65,8 +66,11 @@ def live_server(tmp_path: Path):
     env = dict(os.environ)
     env.update(
         {
-            "GPU_HOST_ROOT": str(root),
-            "GPU_CONTAINER_ROOT": str(root),
+            "GPU_HOST_SERVICES_DIR": str(services_root),
+            "GPU_HOST_RUNTIME_DIR": str(runtime_root),
+            "GPU_SERVICES_DIR": str(services_root),
+            "GPU_RUNTIME_DIR": str(runtime_root),
+            "GPU_ENV_FILE": str(services_root / ".env"),
             "DEFAULT_WAIT_S": "20",
             "DEFAULT_LEASE_TTL_S": "120",
             "QUEUE_CLAIM_WINDOW_S": "3",
@@ -111,17 +115,17 @@ def live_server(tmp_path: Path):
             proc.wait(timeout=10)
             pytest.fail(log_path.read_text())
 
-        yield {"base_url": base_url, "root": root}
+        yield {"base_url": base_url, "runtime_root": runtime_root}
 
         os.killpg(proc.pid, signal.SIGTERM)
         proc.wait(timeout=10)
 
-    _docker_compose_down(root)
+    _docker_compose_down(tmp_path)
 
 
 def test_live_server_stress_queue_and_claims(live_server) -> None:
     base_url = live_server["base_url"]
-    root = live_server["root"]
+    runtime_root = live_server["runtime_root"]
 
     with httpx.Client(base_url=base_url, timeout=30.0) as client:
         acquired = client.post("/acquire", json={"target": "dummy-ok", "owner": "seed"})
@@ -188,7 +192,7 @@ def test_live_server_stress_queue_and_claims(live_server) -> None:
     assert [entry["owner"] for entry in queue] == expected_order
     assert [queued_tokens[entry["owner"]] for entry in queue] == [entry["token"] for entry in queue]
 
-    state_on_disk = json.loads((root / "runtime" / "state.json").read_text())
+    state_on_disk = json.loads((runtime_root / "state.json").read_text())
     assert len(state_on_disk["queue"]) == len(priorities)
     assert state_on_disk["lease"]["token"] == active_token
 

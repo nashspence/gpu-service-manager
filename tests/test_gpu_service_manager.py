@@ -46,12 +46,16 @@ def _docker_compose_down(root: Path) -> None:
 
 @pytest.fixture
 def app_module(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    root = tmp_path / "gpu-root"
-    _copy_dummy_services(root)
-    (root / "runtime").mkdir(parents=True, exist_ok=True)
+    services_root = tmp_path / "services"
+    runtime_root = tmp_path / "runtime"
+    _copy_dummy_services(tmp_path)
+    runtime_root.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch.setenv("GPU_HOST_ROOT", str(root))
-    monkeypatch.setenv("GPU_CONTAINER_ROOT", str(root))
+    monkeypatch.setenv("GPU_HOST_SERVICES_DIR", str(services_root))
+    monkeypatch.setenv("GPU_HOST_RUNTIME_DIR", str(runtime_root))
+    monkeypatch.setenv("GPU_SERVICES_DIR", str(services_root))
+    monkeypatch.setenv("GPU_RUNTIME_DIR", str(runtime_root))
+    monkeypatch.setenv("GPU_ENV_FILE", str(services_root / ".env"))
     monkeypatch.setenv("DEFAULT_WAIT_S", "20")
     monkeypatch.setenv("DEFAULT_LEASE_TTL_S", "60")
     monkeypatch.setenv("QUEUE_CLAIM_WINDOW_S", "2")
@@ -60,7 +64,7 @@ def app_module(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     module = importlib.import_module("app")
     yield module
     try:
-        _docker_compose_down(root)
+        _docker_compose_down(tmp_path)
     finally:
         sys.modules.pop("app", None)
 

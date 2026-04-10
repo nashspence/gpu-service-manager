@@ -7,10 +7,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      GPU_HOST_ROOT: ${GPU_HOST_ROOT}
-      GPU_CONTAINER_ROOT: /gpu
-      DEFAULT_WAIT_S: "900"
-      DEFAULT_LEASE_TTL_S: "1800"
+      GPU_HOST_SERVICES_DIR: ${GPU_HOST_SERVICES_DIR}
+      GPU_HOST_RUNTIME_DIR: ${GPU_HOST_RUNTIME_DIR}
     volumes:
-      - ${GPU_HOST_ROOT}:/gpu
+      - ${GPU_HOST_SERVICES_DIR}:/services
+      - ${GPU_HOST_RUNTIME_DIR}:/runtime
       - /var/run/docker.sock:/var/run/docker.sock

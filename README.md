@@ -72,8 +72,11 @@ The manager uses these environment variables:
 
 | Variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| `GPU_HOST_ROOT` | yes | none | Host path that contains `services/`, `runtime/`, cache directories, and optional `.env` |
-| `GPU_CONTAINER_ROOT` | no | `/gpu` | Path inside the manager container that maps to `GPU_HOST_ROOT` |
+| `GPU_HOST_SERVICES_DIR` | yes | none | Host path containing target Compose projects and optional `.env` |
+| `GPU_HOST_RUNTIME_DIR` | yes | none | Host path used for persisted lease and queue state |
+| `GPU_SERVICES_DIR` | no | `/services` | Services path inside the manager container |
+| `GPU_RUNTIME_DIR` | no | `/runtime` | Runtime state path inside the manager container |
+| `GPU_ENV_FILE` | no | `/services/.env` | Optional env file passed to every `docker compose` invocation |
 | `DEFAULT_WAIT_S` | no | `900` | Default readiness wait timeout for `acquire` |
 | `DEFAULT_LEASE_TTL_S` | no | `1800` | Default lease lifetime |
 | `QUEUE_CLAIM_WINDOW_S` | no | `10` | How long the queue head has to claim the GPU after release |
@@ -81,20 +84,22 @@ The manager uses these environment variables:
 | `HEALTHCHECK_MASTER_LABEL` | no | `gpu.healthcheck-master` | Label key used to choose readiness master |
 | `HEALTHCHECK_MASTER_VALUE` | no | `true` | Label value used to choose readiness master |
 
-If `${GPU_HOST_ROOT}/.env` exists, it is passed to every `docker compose` invocation with `--env-file`.
+If `${GPU_ENV_FILE}` exists, it is passed to every `docker compose` invocation with `--env-file`.
 
 ## Running It
 
-Set the host root and start the manager:
+Set the host directories and start the manager:
 
 ```bash
-export GPU_HOST_ROOT="$PWD"
+export GPU_HOST_SERVICES_DIR="$PWD/services"
+export GPU_HOST_RUNTIME_DIR="$PWD/runtime"
 docker compose up -d --build
 ```
 
 The included top-level Compose file runs the manager on port `8080` and mounts:
 
-- `${GPU_HOST_ROOT}` at `/gpu`
+- `${GPU_HOST_SERVICES_DIR}` at `/services`
+- `${GPU_HOST_RUNTIME_DIR}` at `/runtime`
 - `/var/run/docker.sock`
 
 ## API

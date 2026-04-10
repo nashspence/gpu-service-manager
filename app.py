@@ -48,14 +48,14 @@ def normalize_seconds(value: int | float | str | None, default: float, name: str
     return seconds
 
 
-CONTAINER_GPU_ROOT = Path(os.getenv("GPU_CONTAINER_ROOT", "/gpu"))
-ROOT = CONTAINER_GPU_ROOT / "runtime"
-LOCK_FILE = ROOT / "lease.lock"
-STATE_FILE = ROOT / "state.json"
-SERVICES_DIR = CONTAINER_GPU_ROOT / "services"
+SERVICES_DIR = Path(os.getenv("GPU_SERVICES_DIR", "/services"))
+RUNTIME_DIR = Path(os.getenv("GPU_RUNTIME_DIR", "/runtime"))
+LOCK_FILE = RUNTIME_DIR / "lease.lock"
+STATE_FILE = RUNTIME_DIR / "state.json"
 
-HOST_GPU_ROOT = Path(os.environ["GPU_HOST_ROOT"])
-HOST_SERVICES_DIR = HOST_GPU_ROOT / "services"
+HOST_SERVICES_DIR = Path(os.environ["GPU_HOST_SERVICES_DIR"])
+HOST_RUNTIME_DIR = Path(os.environ["GPU_HOST_RUNTIME_DIR"])
+ENV_FILE = Path(os.getenv("GPU_ENV_FILE", str(SERVICES_DIR / ".env")))
 
 DEFAULT_WAIT_S = float(os.getenv("DEFAULT_WAIT_S", "900"))
 DEFAULT_LEASE_TTL_S = float(os.getenv("DEFAULT_LEASE_TTL_S", "1800"))
@@ -92,7 +92,7 @@ app = FastAPI(title="gpu-service-manager", version="2.0.0")
 
 
 def ensure_dirs() -> None:
-    ROOT.mkdir(parents=True, exist_ok=True)
+    RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def discover_services() -> dict[str, str]:
@@ -120,10 +120,11 @@ def docker_env(extra: dict[str, str] | None = None) -> dict[str, str]:
     env.update(
         {
             "DOCKER_HOST": f"unix://{DOCKER_SOCK}",
-            "GPU_HOST_ROOT": str(HOST_GPU_ROOT),
             "GPU_HOST_SERVICES_DIR": str(HOST_SERVICES_DIR),
-            "GPU_CONTAINER_ROOT": str(CONTAINER_GPU_ROOT),
+            "GPU_HOST_RUNTIME_DIR": str(HOST_RUNTIME_DIR),
             "GPU_SERVICES_DIR": str(SERVICES_DIR),
+            "GPU_RUNTIME_DIR": str(RUNTIME_DIR),
+            "GPU_ENV_FILE": str(ENV_FILE),
         }
     )
     if extra:
@@ -136,8 +137,7 @@ def docker(*args: str, check: bool = True, capture_output: bool = False, quiet: 
 
 
 def compose_env_file_args() -> list[str]:
-    env_file = CONTAINER_GPU_ROOT / ".env"
-    return ["--env-file", str(env_file)] if env_file.exists() else []
+    return ["--env-file", str(ENV_FILE)] if ENV_FILE.exists() else []
 
 
 def compose(target: str, *args: str, check: bool = True, capture_output: bool = False, quiet: bool = False) -> subprocess.CompletedProcess[str]:
