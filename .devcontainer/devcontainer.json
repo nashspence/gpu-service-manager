@@ -1,32 +1,49 @@
 {
-  "name": "gpu-service-manager devcontainer",
-  "image": "mcr.microsoft.com/devcontainers/universal:5",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/nvidia-cuda:3": {
-      "cudaVersion": "12.5"
-    },
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
-    },
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "installMethod": "apt"
-    },
-    "ghcr.io/jsburckhardt/devcontainer-features/codex:1": {}
+  "name": "gpu-service-manager universal dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
   },
   "init": true,
   "privileged": false,
   "overrideCommand": false,
+  "remoteUser": "codespace",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
   "containerEnv": {
-    "PIP_DISABLE_PIP_VERSION_CHECK": "1"
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUNBUFFERED": "1",
+    "UV_LINK_MODE": "copy",
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "NVIDIA_DRIVER_CAPABILITIES": "all"
   },
+  "runArgs": [
+    "--gpus",
+    "all"
+  ],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "updateContentCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": [
+          "tests"
+        ],
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
       "extensions": [
         "ms-azuretools.vscode-docker",
         "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
         "GitHub.vscode-pull-request-github",
         "github.vscode-github-actions",
         "openai.chatgpt"
@@ -38,9 +55,10 @@
     "memory": "4gb",
     "storage": "32gb"
   },
-  "forwardPorts": [80, 8080],
-  "runArgs": [
-    "--gpus",
-    "all"
-  ]
+  "forwardPorts": [8000, 8080, 3000, 5000],
+  "portsAttributes": {
+    "8080": {
+      "label": "gpu-service-manager"
+    }
+  }
 }
