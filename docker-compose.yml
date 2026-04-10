@@ -14,5 +14,5 @@ services:
     restart: unless-stopped
     volumes:
       - ${REPO_ROOT}:${REPO_ROOT}
-      - ${GPU_HOST_RUNTIME_DIR}:/runtime
+      - ${REPO_ROOT}/runtime:/runtime
       - /var/run/docker.sock:/var/run/docker.sock

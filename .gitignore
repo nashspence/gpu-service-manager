@@ -3,4 +3,5 @@ __pycache__
 
 /.env
 /runtime
-/services
+
+compose.override.yaml
