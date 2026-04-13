@@ -7,14 +7,13 @@ services:
       GPU_SERVICE_CONFIG_YAML: |
         services:
           - name: dummy-ok
-            path: /workspaces/gpu-service-manager/tests/fixtures/services/dummy-ok/docker-compose.yml
-          - /workspaces/gpu-service-manager/tests/fixtures/services/dummy-alt/compose.yaml
+            path: /workspace/tests/fixtures/services/dummy-ok/docker-compose.yml
+          - /workspace/tests/fixtures/services/dummy-alt/compose.yaml
     image: gpu-service-manager:latest
     ports:
       - "8080:8080"
     restart: unless-stopped
     volumes:
-      - /workspaces/gpu-service-manager/tests/fixtures/services/dummy-ok:/workspaces/gpu-service-manager/tests/fixtures/services/dummy-ok:ro
-      - /workspaces/gpu-service-manager/tests/fixtures/services/dummy-alt:/workspaces/gpu-service-manager/tests/fixtures/services/dummy-alt:ro
-      - /workspaces/gpu-service-manager/tests/fixtures/runtime:/runtime
+      - ./:/workspace:ro
+      - ./tests/fixtures/runtime:/runtime
       - /var/run/docker.sock:/var/run/docker.sock

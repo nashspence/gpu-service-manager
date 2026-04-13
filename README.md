@@ -160,12 +160,12 @@ For local development from this repository:
 docker compose up -d --build
 ```
 
-The included top-level [`docker-compose.yml`](/workspaces/gpu-service-manager/docker-compose.yml) is a local-dev example that mirrors each fixture service directory individually:
+The included top-level [`docker-compose.yml`](/workspaces/services/services/infrastructure/gpu-service-manager/docker-compose.yml) is a local-dev example that mounts the repo at `/workspace` inside the container:
 
-- `/workspaces/gpu-service-manager/tests/fixtures/services/dummy-ok` -> same path in the container
-- `/workspaces/gpu-service-manager/tests/fixtures/services/dummy-alt` -> same path in the container
+- `./tests/fixtures/services/dummy-ok` -> `/workspace/tests/fixtures/services/dummy-ok`
+- `./tests/fixtures/services/dummy-alt` -> `/workspace/tests/fixtures/services/dummy-alt`
 
-If your checkout lives somewhere other than `/workspaces/gpu-service-manager`, update those bind-mount paths and the matching `GPU_SERVICE_CONFIG_YAML` paths together so they still mirror exactly.
+If you customize the mounts, update those bind-mount paths and the matching `GPU_SERVICE_CONFIG_YAML` paths together so they still mirror exactly.
 
 ## API
 

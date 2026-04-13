@@ -11,7 +11,11 @@ services:
         services:
           - /opt/stacks/comfyui/docker-compose.yml
           - /srv/ml/whisperx/compose.yaml
-    volumes:
+    volumes: !override
+      # Keep the runtime and docker.sock mounts from the base compose file, but override the stack mounts with the preferred local pattern.
+      - ./runtime:/runtime
+      - /var/run/docker.sock:/var/run/docker.sock
+
       # Mirror each managed stack at the same host path inside the container.
       - /opt/stacks/comfyui:/opt/stacks/comfyui:ro
       - /srv/ml/whisperx:/srv/ml/whisperx:ro
